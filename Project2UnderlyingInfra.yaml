@@ -3,50 +3,50 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Project 2 underlying infrastucture.
 
 Parameters:
-  VPCCIDR:
+  AWSomeVPCCIDR:
     Description: CIDR Block for VPC
     Type: String
     Default: 10.0.0.0/16
     AllowedValues:
       - 10.0.0.0/16
 
-  PublicSubnet1Param:
-    Description: Public Subnet 1-AWSome
+  AWSomePublicSubnet1Param:
+    Description: AWSomePublic Subnet 1
     Type: String
     Default: 10.0.0.0/24
     AllowedValues:
       - 10.0.0.0/24
 
-  PublicSubnet2Param:
-    Description: Public Subnet 2-AWSome
+  AWSomePublicSubnet2Param:
+    Description: AWSomePublic Subnet 2
     Type: String
     Default: 10.0.1.0/24
     AllowedValues:
       - 10.0.1.0/24
 
-  AppSubnet1Param:
-    Description: App Subnet 1-AWSome
+  AWSomeAppSubnet1Param:
+    Description: AWSomeApp Subnet 1
     Type: String
     Default: 10.0.2.0/24
     AllowedValues:
       - 10.0.2.0/24
 
-  AppSubnet2Param:
-    Description: App Subnet 2-AWSome
+  AWSomeAppSubnet2Param:
+    Description: AWSomeApp Subnet 2
     Type: String
     Default: 10.0.3.0/24
     AllowedValues:
       - 10.0.3.0/24
 
-  DatabaseSubnet1Param:
-    Description: Private Subnet 1-AWSome
+  AWSomeDatabaseSubnet1Param:
+    Description: AWSomePrivate Subnet 1
     Type: String
     Default: 10.0.4.0/24
     AllowedValues:
       - 10.0.4.0/24
 
-  DatabaseSubnet2Param:
-    Description: Private Subnet 2-AWSome
+  AWSomeDatabaseSubnet2Param:
+    Description: AWSomePrivate Subnet 2
     Type: String
     Default: 10.0.5.0/24
     AllowedValues:
@@ -59,16 +59,20 @@ Resources:
   AWSomeVPC:
     Type: "AWS::EC2::VPC"
     Properties:
-      CidrBlock: !Ref VPCCIDR
+      CidrBlock: !Ref AWSomeVPCCIDR
       EnableDnsSupport: True
       EnableDnsHostnames: True
       InstanceTenancy: "default"
       Tags:
         - Key: Name
-          Value: VPC-AWSome
+          Value: AWSomeVPC
 
   AWSomeInternetGateway:
     Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+        - Key: Name
+          Value: AWSomeIGW
 
   AttachGateway:
     Type: "AWS::EC2::VPCGatewayAttachment"
@@ -76,228 +80,234 @@ Resources:
       VpcId: !Ref AWSomeVPC
       InternetGatewayId: !Ref AWSomeInternetGateway
 
-  NATGateway1AWSome:
+  AWSomeNATGateway1:
     Type: AWS::EC2::NatGateway
     Properties:
-      AllocationId: !GetAtt ElasticIPAddress1AWSome.AllocationId
-      SubnetId: !Ref PublicSubnet1AWSome
+      AllocationId: !GetAtt AWSomeElasticIPAddress1.AllocationId
+      SubnetId: !Ref AWSomePublicSubnet1
       Tags:
         - Key: Name
-          Value: NATGateway1-AWSome
+          Value: AWSomeNATGateway1
 
-  ElasticIPAddress1AWSome:
+  AWSomeElasticIPAddress1:
     Type: AWS::EC2::EIP
     Properties:
       Domain: vpc
-
-  NATGateway2AWSome:
-    Type: AWS::EC2::NatGateway
-    Properties:
-      AllocationId: !GetAtt ElasticIPAddress2AWSome.AllocationId
-      SubnetId: !Ref PublicSubnet2AWSome
       Tags:
         - Key: Name
-          Value: NATGateway2-AWSome
+          Value: AWSomeEIP1
 
-  ElasticIPAddress2AWSome:
+  AWSomeNATGateway2:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt AWSomeElasticIPAddress2.AllocationId
+      SubnetId: !Ref AWSomePublicSubnet2
+      Tags:
+        - Key: Name
+          Value: AWSomeNATGateway2
+
+  AWSomeElasticIPAddress2:
     Type: AWS::EC2::EIP
     Properties:
       Domain: vpc
+      Tags:
+        - Key: Name
+          Value: AWSomeEIP2
 
     #Subnets
-  PublicSubnet1AWSome:
+  AWSomePublicSubnet1:
     Type: "AWS::EC2::Subnet"
     Properties:
       VpcId: !Ref AWSomeVPC
-      CidrBlock: !Ref PublicSubnet1Param
+      CidrBlock: !Ref AWSomePublicSubnet1Param
       MapPublicIpOnLaunch: True
       AvailabilityZone: "us-east-1a"
       Tags:
         - Key: Name
-          Value: PublicSubnet1AWSome
+          Value: AWSomePublicSubnet1
 
-  PublicSubnet2AWSome:
+  AWSomePublicSubnet2:
     Type: "AWS::EC2::Subnet"
     Properties:
       VpcId: !Ref AWSomeVPC
-      CidrBlock: !Ref PublicSubnet2Param
+      CidrBlock: !Ref AWSomePublicSubnet2Param
       MapPublicIpOnLaunch: True
       AvailabilityZone: "us-east-1b"
       Tags:
         - Key: Name
-          Value: PublicSubnet2AWSome
+          Value: AWSomePublicSubnet2
 
-  AppSubnet1AWSome:
+  AWSomeAppSubnet1:
     Type: "AWS::EC2::Subnet"
     Properties:
       VpcId: !Ref AWSomeVPC
-      CidrBlock: !Ref AppSubnet1Param
+      CidrBlock: !Ref AWSomeAppSubnet1Param
       MapPublicIpOnLaunch: False
       AvailabilityZone: "us-east-1a"
       Tags:
         - Key: Name
-          Value: AppSubnet1AWSome
+          Value: AWSomeAppSubnet1
 
-  AppSubnet2AWSome:
+  AWSomeAppSubnet2:
     Type: "AWS::EC2::Subnet"
     Properties:
       VpcId: !Ref AWSomeVPC
-      CidrBlock: !Ref AppSubnet2Param
+      CidrBlock: !Ref AWSomeAppSubnet2Param
       MapPublicIpOnLaunch: False
       AvailabilityZone: "us-east-1b"
       Tags:
         - Key: Name
-          Value: AppSubnet2AWSome
+          Value: AWSomeAppSubnet2
 
-  DatabaseSubnet1AWSome:
+  AWSomeDatabaseSubnet1:
     Type: "AWS::EC2::Subnet"
     Properties:
       VpcId: !Ref AWSomeVPC
-      CidrBlock: !Ref DatabaseSubnet1Param
+      CidrBlock: !Ref AWSomeDatabaseSubnet1Param
       MapPublicIpOnLaunch: False
       AvailabilityZone: "us-east-1a"
       Tags:
         - Key: Name
-          Value: DatabaseSubnet1AWSome
+          Value: AWSomeDatabaseSubnet1
 
-  DatabaseSubnet2AWSome:
+  AWSomeDatabaseSubnet2:
     Type: "AWS::EC2::Subnet"
     Properties:
       VpcId: !Ref AWSomeVPC
-      CidrBlock: !Ref DatabaseSubnet2Param
+      CidrBlock: !Ref AWSomeDatabaseSubnet2Param
       MapPublicIpOnLaunch: False
       AvailabilityZone: "us-east-1b"
       Tags:
         - Key: Name
-          Value: DatabaseSubnet2AWSome
+          Value: AWSomeDatabaseSubnet2
 
   #Routing
   #Route Tables
-  PublicRouteTableAWSome:
+  AWSomePublicRouteTable:
     Type: "AWS::EC2::RouteTable"
     Properties:
       VpcId: !Ref AWSomeVPC
       Tags:
         - Key: Name
-          Value: PublicRouteTableAWSome
+          Value: AWSomePublicRouteTable
 
-  PrivateRouteTableAZ1AWSome:
+  AWSomePrivateRouteTableAZ1:
     Type: "AWS::EC2::RouteTable"
     Properties:
       VpcId: !Ref AWSomeVPC
       Tags:
         - Key: Name
-          Value: PrivateRouteTableAZ1AWSome
+          Value: AWSomePrivateRouteTableAZ1
 
-  PrivateRouteTableAZ2AWSome:
+  AWSomePrivateRouteTableAZ2:
     Type: "AWS::EC2::RouteTable"
     Properties:
       VpcId: !Ref AWSomeVPC
       Tags:
         - Key: Name
-          Value: PrivateRouteTableAZ2AWSome
+          Value: AWSomePrivateRouteTableAZ2
 
   #Routes
-  PublicRouteAWSome:
+  AWSomePublicRoute:
     Type: "AWS::EC2::Route"
     Properties:
-      RouteTableId: !Ref PublicRouteTableAWSome
+      RouteTableId: !Ref AWSomePublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref AWSomeInternetGateway
 
-  PrivateRouteAZ1AWSome:
+  AWSomePrivateRouteAZ1:
     Type: "AWS::EC2::Route"
     Properties:
-      RouteTableId: !Ref PrivateRouteTableAZ1AWSome
+      RouteTableId: !Ref AWSomePrivateRouteTableAZ1
       DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref NATGateway1AWSome
+      NatGatewayId: !Ref AWSomeNATGateway1
 
-  PrivateRouteAZ2AWSome:
+  AWSomePrivateRouteAZ2:
     Type: "AWS::EC2::Route"
     Properties:
-      RouteTableId: !Ref PrivateRouteTableAZ2AWSome
+      RouteTableId: !Ref AWSomePrivateRouteTableAZ2
       DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref NATGateway2AWSome
+      NatGatewayId: !Ref AWSomeNATGateway2
 
   #Subnet Associations
-  PublicSubnet1RouteTableAssociationAWSome:
+  AWSomePublicSubnet1RouteTableAssociation:
     Type: "AWS::EC2::SubnetRouteTableAssociation"
     Properties:
-      SubnetId: !Ref PublicSubnet1AWSome
-      RouteTableId: !Ref PublicRouteTableAWSome
+      SubnetId: !Ref AWSomePublicSubnet1
+      RouteTableId: !Ref AWSomePublicRouteTable
 
-  PublicSubnet2RouteTableAssociationAWSome:
+  AWSomePublicSubnet2RouteTableAssociation:
     Type: "AWS::EC2::SubnetRouteTableAssociation"
     Properties:
-      SubnetId: !Ref PublicSubnet2AWSome
-      RouteTableId: !Ref PublicRouteTableAWSome
+      SubnetId: !Ref AWSomePublicSubnet2
+      RouteTableId: !Ref AWSomePublicRouteTable
 
-  AppSubnet1RouteTableAssociationAWSome:
+  AWSomeAppSubnet1RouteTableAssociation:
     Type: "AWS::EC2::SubnetRouteTableAssociation"
     Properties:
-      SubnetId: !Ref AppSubnet1AWSome
-      RouteTableId: !Ref PrivateRouteTableAZ1AWSome
+      SubnetId: !Ref AWSomeAppSubnet1
+      RouteTableId: !Ref AWSomePrivateRouteTableAZ1
 
-  AppSubnet2RouteTableAssociationAWSome:
+  AWSomeAppSubnet2RouteTableAssociation:
     Type: "AWS::EC2::SubnetRouteTableAssociation"
     Properties:
-      SubnetId: !Ref AppSubnet2AWSome
-      RouteTableId: !Ref PrivateRouteTableAZ2AWSome
+      SubnetId: !Ref AWSomeAppSubnet2
+      RouteTableId: !Ref AWSomePrivateRouteTableAZ2
 
-  DatabaseSubnet1RouteTableAssociationAWSome:
+  AWSomeDatabaseSubnet1RouteTableAssociation:
     Type: "AWS::EC2::SubnetRouteTableAssociation"
     Properties:
-      SubnetId: !Ref DatabaseSubnet1AWSome
-      RouteTableId: !Ref PrivateRouteTableAZ1AWSome
+      SubnetId: !Ref AWSomeDatabaseSubnet1
+      RouteTableId: !Ref AWSomePrivateRouteTableAZ1
 
-  DatabaseSubnet2RouteTableAssociationAWSome:
+  AWSomeDatabaseSubnet2RouteTableAssociation:
     Type: "AWS::EC2::SubnetRouteTableAssociation"
     Properties:
-      SubnetId: !Ref DatabaseSubnet2AWSome
-      RouteTableId: !Ref PrivateRouteTableAZ2AWSome
+      SubnetId: !Ref AWSomeDatabaseSubnet2
+      RouteTableId: !Ref AWSomePrivateRouteTableAZ2
 
   ###########
   # Security Groups
   ###########
-  AppInstanceSecurityGroupAWSome:
+  AWSomeAppInstanceSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
       GroupDescription: Security Group allowing HTTP traffic for project 2 instances
       VpcId: !Ref AWSomeVPC
       Tags:
         - Key: Name
-          Value: AppInstanceSecurityGroupAWSome
+          Value: AWSomeAppInstanceSecurityGroup
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
 
-  RDSSecurityGroupAWSome:
+  AWSomeRDSSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
       GroupDescription: Security Group allowing database instances to have internet traffic
       VpcId: !Ref AWSomeVPC
       Tags:
         - Key: Name
-          Value: RDSSecurityGroupAWSome
+          Value: AWSomeRDSSecurityGroup
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 3306
           ToPort: 3306
           CidrIp: 0.0.0.0/0
 
-  EFSMountTargetSecurityGroupAWSome:
+  AWSomeEFSMountTargetSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
       GroupDescription: Security Group allowing traffic between EFS Mount Targets and Amazon EC2 instances
       VpcId: !Ref AWSomeVPC
       Tags:
         - Key: Name
-          Value: EFSMountTargetSecurityGroupAWSome
+          Value: AWSomeEFSMountTargetSecurityGroup
       SecurityGroupIngress:
         - IpProtocol: tcp
-          SourceSecurityGroupId: !Ref AppInstanceSecurityGroupAWSome
+          SourceSecurityGroupId: !Ref AWSomeAppInstanceSecurityGroup
           FromPort: 80
           ToPort: 80
         - IpProtocol: TCP
@@ -312,41 +322,41 @@ Outputs:
 
   DatabaseSubnet1CIDR:
     Description: "CIDR block for the DB Subnet in AZ a"
-    Value: !Ref DatabaseSubnet1Param
+    Value: !Ref AWSomeDatabaseSubnet1Param
 
   DatabaseSubnet2CIDR:
     Description: "CIDR block for the DB Subnet in AZ b"
-    Value: !Ref DatabaseSubnet2Param
+    Value: !Ref AWSomeDatabaseSubnet2Param
 
   DatabaseSubnet1ID:
     Description: "The Subnet ID for the DB Subnet in AZ a"
-    Value: !Ref DatabaseSubnet1AWSome
+    Value: !Ref AWSomeDatabaseSubnet1
     Export:
-      Name: "DatabaseSubnet1AWSomeID"
+      Name: "AWSomeDatabaseSubnet1ID"
 
   DatabaseSubnet2ID:
     Description: "The Subnet ID for the DB Subnet in AZ b"
-    Value: !Ref DatabaseSubnet2AWSome
+    Value: !Ref AWSomeDatabaseSubnet2
     Export:
-      Name: "DatabaseSubnet2AWSomeID"
+      Name: "AWSomeDatabaseSubnet2ID"
 
   AppInstanceSecurityGroupID:
     Description: "The Security Group ID for the Lab Instance Security Group"
-    Value: !Ref AppInstanceSecurityGroupAWSome
+    Value: !Ref AWSomeAppInstanceSecurityGroup
     Export:
-      Name: "AppInstanceSecurityGroupAWSomeID"
+      Name: "AWSomeAppInstanceSecurityGroupID"
 
   EFSMountTargetSecurityGroupID:
     Description: "The Security Group ID for the Lab EFS Mount Target"
-    Value: !Ref EFSMountTargetSecurityGroupAWSome
+    Value: !Ref AWSomeEFSMountTargetSecurityGroup
     Export:
-      Name: "EFSMountTargetSecurityGroupAWSomeID"
+      Name: "AWSomeEFSMountTargetSecurityGroupID"
 
   RDSSecurityGroupID:
     Description: "The Security Group ID for the Lab RDS cluster"
-    Value: !Ref RDSSecurityGroupAWSome
+    Value: !Ref AWSomeRDSSecurityGroup
     Export:
-      Name: "RDSSecurityGroupAWSomeID"
+      Name: "AWSomeRDSSecurityGroupID"
 
   VPCID:
     Description: "The VPC ID for Project 2"
