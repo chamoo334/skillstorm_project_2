@@ -6,7 +6,7 @@ from decimal import Decimal
 # logging.basicConfig(level=logging.DEBUG)
 
 # DynamoDB Connectivity
-dbTableName = 'test1'
+dbTableName = 'AWSomeTable'
 dynamoDB = boto3.resource('dynamodb')
 dbTable = dynamoDB.Table(dbTableName)
 
@@ -70,7 +70,7 @@ def createMessage(message_data):
 def removeMessage(messageId):
     try:
         dbResponse = dbTable.delete_item(
-            Key={ 'messages': messageId },
+            Key={ 'id': messageId },
             ReturnValues='ALL_OLD'
         )
 
@@ -87,15 +87,17 @@ def lambda_handler(event, context):
     # health check
     if httpMethod == healthURL[0] and path == healthURL[1]:
         response = responseMessage(200, 'Healthy!')
-    
+    # get all messages
     elif httpMethod == readURL[0] and path == readURL[1]:
         response = readMessages()
 
+    # create message - requires json {"id": "ex123", "header": "Example", "message": "Some message!", "signature": "user-signature"}
     elif httpMethod == signURL[0] and path == signURL[1]:
         response = createMessage(json.loads(event['body']))
 
+    # delete message - requires json {"id": "ex123"}
     elif httpMethod == removeURL[0] and path == removeURL[1]:
-        response = removeMessage(json.loads(event['body'])['message'])
+        response = removeMessage(json.loads(event['body'])['id'])
 
     else:
         response = responseMessage(404, 'Not Found: Check http method and path')

@@ -3,35 +3,314 @@ Description: Initial API Gateway, Lambda, DynamoDB infrastructure.
 
 
 Resources:
-  LambdaFunction:
-  Type: AWS::Lambda::Function
-  Properties:
-    Description: Team AWSome Lambda function for DynamoDB CRUD
-    Architectures: x86_64
-    MemorySize: 500
-    Timeout: 60
-    Runtime: python3.9
-    Role: !Ref AWSomeLambdaRole
-    Handler: lambda_handler
-    Code: 
-      ZipFile: |
-        print('Loading DynamoDB Lambda Function')
-    # VpcConfig: 
-        
+  # IAM Role
+  AWSomeLambdaRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: Role for Lambda function to assume with CloudWatch and DynamoDB full access
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+      RoleName: AWSomeLambdaRole
+      Tags: 
+        - Key: "name"
+          Value: "team-awsome"
+        - Key: "purpose"
+          Value: "project2"
+
+  # DynamoDB Table
+  AWSomeDynamoDbTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: AWSomeTable
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - 
+          AttributeName: id
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: id
+          KeyType: HASH
+      Tags: 
+        - Key: "name"
+          Value: "team-awsome"
+        - Key: "purpose"
+          Value: "project2"
+
+  # Lambda Function
+  AWSomeLambdaFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: AWSomeLambdaRole
+    Properties:
+      Description: Team AWSome Lambda function for API & DynamoDB CRUD
+      Architectures: 
+        - x86_64
+      MemorySize: 500
+      Timeout: 60
+      Runtime: python3.9
+      Role: !GetAtt AWSomeLambdaRole.Arn
+      Handler: index.lambda_handler
+      Tags: 
+        - Key: "name"
+          Value: "team-awsome"
+        - Key: "purpose"
+          Value: "project2"
+      Code: 
+        ZipFile: |
+          import boto3
+          import json
+          import logging
+          from decimal import Decimal
+
+          # DynamoDB Connectivity
+          dbTableName = 'AWSomeTable'
+          dynamoDB = boto3.resource('dynamodb')
+          dbTable = dynamoDB.Table(dbTableName)
+
+          # API Gateway Resource: method, path
+          healthURL = ['GET', '/health']
+          readURL = ['GET', '/messages']
+          signURL = ['POST', '/sign']
+          removeURL = ['DELETE', '/remove']
+
+
+          # https://stackoverflow.com/questions/63278737/object-of-type-decimal-is-not-json-serializable
+          class DecimalEncoder(json.JSONEncoder):
+            def default(self, obj):
+              if isinstance(obj, Decimal):
+                return str(obj)
+              return json.JSONEncoder.default(self, obj)
+
+          # API response
+          def responseMessage(statusCode, body):
+              return {
+                  'statusCode': statusCode,
+                  'headers': {
+                      'Content-Type': 'application/json',
+                      'Access-Control-Allow-Origion': '*' # required for cross region access
+                  },
+                  'body': json.dumps(body, cls=DecimalEncoder)
+              }
+          
+          # Get all messages
+          def readMessages():
+              try:
+                  dbResponse = dbTable.scan()
+                  data = dbResponse['Items']
+
+                  while 'LastEvaluatedKey' in dbResponse:
+                      dbResponse = dbTable.scan(ExclusiveStartKey=dbResponse['LastEvaluatedKey'])
+                      data.extend(dbResponse['Items'])
+
+                  return responseMessage(200, { 'messages': data })
+              except Exception as e:
+                  logging.error("Exception occurred", exc_info=True)
+                  return responseMessage(500, { 'Error': 'Unable to read messages' })
+
+          # Create a message
+          def createMessage(message_data):
+              try:
+                  dbTable.put_item(Item=message_data)
+                  
+                  return responseMessage(
+                      200, 
+                      {
+                          'Save_Status': 'Success',
+                          'Item': message_data
+                      }
+                  )
+              except Exception as e:
+                  logging.error("Exception occurred", exc_info=True)
+                  return responseMessage(500, { 'Save_Status': 'Fail' })
+
+          # Delete a message
+          def removeMessage(messageId):
+              try:
+                  dbResponse = dbTable.delete_item(
+                      Key={ 'id': messageId },
+                      ReturnValues='ALL_OLD'
+                  )
+
+                  return responseMessage( 200, { 'Delete_Status': 'Success' } )
+              except Exception as e:
+                  logging.error("Exception occurred", exc_info=True)
+                  return responseMessage(500, { 'Delete_Status': 'Fail' } )
+
+          # lambda function entrypoint
+          def lambda_handler(event, context):
+              httpMethod = event['httpMethod']
+              path = event['path']
+
+              # health check
+              if httpMethod == healthURL[0] and path == healthURL[1]:
+                  response = responseMessage(200, 'Healthy!')
+              # get all messages
+              elif httpMethod == readURL[0] and path == readURL[1]:
+                  response = readMessages()
+
+              # create message - requires json {"id": "ex123", "header": "Example", "message": "Some message!", "signature": "user-signature"}
+              elif httpMethod == signURL[0] and path == signURL[1]:
+                  response = createMessage(json.loads(event['body']))
+
+              # delete message - requires json {"id": "ex123"}
+              elif httpMethod == removeURL[0] and path == removeURL[1]:
+                  response = removeMessage(json.loads(event['body'])['id'])
+
+              else:
+                  response = responseMessage(404, 'Not Found: Check http method and path')
+
+              return response
+
+  # API Gateway Rest API
+  # TODO: Private?
+  AWSomeAPIGatewayRestAPI:
+    Type: AWS::ApiGateway::RestApi
+    DependsOn: AWSomeLambdaFunction
+    Properties:
+      Name: AWSomeAPI
+      Tags: 
+        - Key: "name"
+          Value: "team-awsome"
+        - Key: "purpose"
+          Value: "project2"
+  
+  # API Gateway Resources
+  # TODO: Loop?
+  AWSomeAPIHealthResource:
+    Type: AWS::ApiGateway::Resource
+    DependsOn: AWSomeAPIGatewayRestAPI
+    Properties: 
+      ParentId: !GetAtt
+        - AWSomeAPIGatewayRestAPI
+        - RootResourceId
+      PathPart: health
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+
+  AWSomeAPIMessagesResource:
+    Type: AWS::ApiGateway::Resource
+    DependsOn: AWSomeAPIGatewayRestAPI
+    Properties: 
+      ParentId: !GetAtt
+        - AWSomeAPIGatewayRestAPI
+        - RootResourceId
+      PathPart: messages
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+
+  AWSomeAPISignResource:
+    Type: AWS::ApiGateway::Resource
+    DependsOn: AWSomeAPIGatewayRestAPI
+    Properties: 
+      ParentId: !GetAtt
+        - AWSomeAPIGatewayRestAPI
+        - RootResourceId
+      PathPart: sign
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+  
+  AWSomeAPIRemoveResource:
+    Type: AWS::ApiGateway::Resource
+    DependsOn: AWSomeAPIGatewayRestAPI
+    Properties: 
+      ParentId: !GetAtt
+        - AWSomeAPIGatewayRestAPI
+        - RootResourceId
+      PathPart: remove
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+
+  # API Gateway Methods
+  # TODO: Loop?
+  AWSomeAPIHealthMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn:
+      - AWSomeLambdaFunction
+      - AWSomeAPIHealthResource
+    Properties:
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+      ResourceId: !Ref AWSomeAPIHealthResource
+      AuthorizationType: None
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AWSomeLambdaFunction.Arn}/invocations
     
+  AWSomeAPIMessagesMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn:
+      - AWSomeLambdaFunction
+      - AWSomeAPIMessagesResource
+    Properties:
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+      ResourceId: !Ref AWSomeAPIMessagesResource
+      AuthorizationType: None
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AWSomeLambdaFunction.Arn}/invocations
+  
+  AWSomeAPISignMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn:
+      - AWSomeLambdaFunction
+      - AWSomeAPISignResource
+    Properties:
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+      ResourceId: !Ref AWSomeAPISignResource
+      AuthorizationType: None
+      HttpMethod: POST
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AWSomeLambdaFunction.Arn}/invocations
+  
+  AWSomeAPIRemoveMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn:
+      - AWSomeLambdaFunction
+      - AWSomeAPIRemoveResource
+    Properties:
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+      ResourceId: !Ref AWSomeAPIRemoveResource
+      AuthorizationType: None
+      HttpMethod: DELETE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AWSomeLambdaFunction.Arn}/invocations
 
+  # API Gateway Permission to call Lambda function
+  AWSomeAPIGatewayPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !GetAtt AWSomeLambdaFunction.Arn
+      Principal: apigateway.amazonaws.com
+    DependsOn:
+      - AWSomeAPIGatewayRestAPI
+      - AWSomeLambdaFunction
 
-  DynamoDbTable:
+  # API Gateway Deployment
+  AWSomeAPIGatewayDeployment:
+    Type: 'AWS::ApiGateway::Deployment'
+    Properties:
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+      StageName: production
+    DependsOn:
+      - AWSomeAPIHealthMethod
+      - AWSomeAPIMessagesMethod
+      - AWSomeAPISignMethod
+      - AWSomeAPIRemoveMethod
 
-  APIGatewayRestAPI:
+        
 
-  APIGatewayResource:
-
-  APIGatewayMethod:
-
-  APIGatewayDeployment:
-
-  APIGatewayPermissions:
-
-  IAMRole:
 
