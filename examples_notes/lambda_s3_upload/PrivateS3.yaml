@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: S3 Bucket for nested stack files. Ansible can be used to add files to S3 Bucket to reduce cost.
+
+Resources:
+  # S3 Bucket
+  AWSomeStackS3Bucket
+    Type: AWS::S3::Bucket
+    Properties: 
+      BucketName: AWSomeStackBucketProject2
+      VersioningConfiguration: 
+        Status: Enabled
+      Tags: 
+        - Key: "name"
+          Value: "team-awsome"
+        - Key: "purpose"
+          Value: "project2"
+      # CorsConfiguration: 
+      #   CorsConfiguration:
+      #     CorsRules:
+      #       - AllowedHeaders:
+      #           - '*'
+      #         AllowedMethods:
+      #           - GET
+      #         AllowedOrigins:
+      #           - '*'
+      #         ExposedHeaders:
+      #           - Date
+      #         Id: myCORSRuleId1
+      #         MaxAge: 3600
+      # OwnershipControls: 
+      #   OwnershipControls
+      # PublicAccessBlockConfiguration: 
+      #   PublicAccessBlockConfiguration
+
+
+  # S3 Bucket Policy
+  AWSomeStackS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties: 
+      Bucket: !Ref AWSomeStackS3Bucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 's3:GetObject'
+            Effect: Allow
+            Resource:
+              - !Sub arn:aws:s3:::${AWSomeStackS3Bucket}/*
+              - !Sub arn:aws:s3:::${AWSomeStackS3Bucket}
+            Principal: '*'
+            Condition:
+              StringLike:
+                'aws:Referer':
+                  - 'http://www.example.com/*'
+                  - 'http://example.net/*'
+              IpAddress:
+                'aws:SourceIP': 10.0.0.0/8
+                  - 
+        Statement:
+          - Action:
+              - 's3:*'
+            Effect: Allow
+            Resource:
+              - !Sub arn:aws:s3:::${AWSomeStackS3Bucket}/*
+              - !Sub arn:aws:s3:::${AWSomeStackS3Bucket}
+            Principal: '*'
+            Condition:
+              StringLike:
+                'aws:Referer':
+                  - !Sub 'arn:aws:sts::${AWS::AccountId}:'

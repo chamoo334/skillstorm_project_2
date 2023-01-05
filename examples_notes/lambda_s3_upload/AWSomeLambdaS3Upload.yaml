@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: S3 Bucket for nested stack files. Ansible can be used to add files to S3 Bucket to reduce cost.
+
+Resources:
+  # S3 Bucket
+  AWSomeStackS3Bucket
+    Type: AWS::S3::Bucket
+    Properties: 
+      BucketName: AWSomeStackBucketProject2
+      VersioningConfiguration: 
+        Status: Enabled
+      Tags: 
+        - Key: "name"
+          Value: "team-awsome"
+        - Key: "purpose"
+          Value: "project2"
+      # CorsConfiguration: 
+      #   CorsConfiguration
+      # OwnershipControls: 
+      #   OwnershipControls
+      # PublicAccessBlockConfiguration: 
+      #   PublicAccessBlockConfiguration
+
+
+  # S3 Bucket Policy
+
+  # https://aws.amazon.com/premiumsupport/knowledge-center/cloudformation-s3-custom-resources/
+  # IAM Role for Lambda
+  AWSomeS3LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AWSomeS3LambdaRole
+      Description: Role for Lambda function to add files to S3 bucket
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+      Policies:
+        - PolicyName: AWSomeLambdaS3Policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              Effect: Allow
+              Resource:
+                - !Sub arn:aws:s3:::${AWSomeStackS3Bucket}/*
+                - !Sub arn:aws:s3:::${AWSomeStackS3Bucket}
+      Tags: 
+        - Key: "name"
+          Value: "team-awsome"
+        - Key: "purpose"
+          Value: "project2"
+  
+  # Lambda Function to add files
+  AWSomeS3LambdaFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Description: "Work with S3 Buckets!"
+      FunctionName: AWSomeS3Function
+      Handler: index.lambda_handler
+      Role: !GetAtt AWSomeS3LambdaRole.Arn
+      Timeout: 360
+      Runtime: python3.9
+      Code:
+        ZipFile: |
+        import boto3
+        

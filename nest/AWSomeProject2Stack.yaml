@@ -1,0 +1,4 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Nested stack includes VPC, DynamoDB, API Gateway, Lambda, IAM Roles
+
+Resources:

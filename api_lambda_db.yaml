@@ -4,7 +4,7 @@ Description: Initial API Gateway, Lambda, DynamoDB infrastructure.
 
 Resources:
   # IAM Role
-  AWSomeLambdaRole:
+  AWSomeAPILambdaRole:
     Type: AWS::IAM::Role
     Properties: 
       AssumeRolePolicyDocument:
@@ -20,7 +20,7 @@ Resources:
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/CloudWatchFullAccess
         - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
-      RoleName: AWSomeLambdaRole
+      RoleName: AWSomeAPILambdaRole
       Tags: 
         - Key: "name"
           Value: "team-awsome"
@@ -52,6 +52,7 @@ Resources:
     Type: AWS::Lambda::Function
     DependsOn: AWSomeLambdaRole
     Properties:
+      FunctionName: AWSomeAPIDBFunction
       Description: Team AWSome Lambda function for API & DynamoDB CRUD
       Architectures: 
         - x86_64
