@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Initial API Gateway, Lambda, DynamoDB infrastructure.
+
+
+Resources:
+  LambdaFunction:
+  Type: AWS::Lambda::Function
+  Properties:
+    Description: Team AWSome Lambda function for DynamoDB CRUD
+    Architectures: x86_64
+    MemorySize: 500
+    Timeout: 60
+    Runtime: python3.9
+    Role: !Ref AWSomeLambdaRole
+    Handler: lambda_handler
+    Code: 
+      ZipFile: |
+        print('Loading DynamoDB Lambda Function')
+    # VpcConfig: 
+        
+    
+
+
+  DynamoDbTable:
+
+  APIGatewayRestAPI:
+
+  APIGatewayResource:
+
+  APIGatewayMethod:
+
+  APIGatewayDeployment:
+
+  APIGatewayPermissions:
+
+  IAMRole:
+
