@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: DynamoDB.
+
+Resources:
+  AWSomeDynamoDbTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: AWSomeTable
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - 
+          AttributeName: id
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: id
+          KeyType: HASH
+      Tags: 
+        - Key: "name"
+          Value: "team-awsome"
+        - Key: "purpose"
+          Value: "project2"
+
+Outputs:
+  DynamoDBTableName:
+    Description: "DynamoDB Table"
+    Value: !Ref AWSomeDynamoDbTable

@@ -358,8 +358,8 @@ Outputs:
     Export:
       Name: "AWSomeRDSSecurityGroupID"
 
-  VPCID:
+  AWSomeVPCID:
     Description: "The VPC ID for Project 2"
     Value: !Ref AWSomeVPC
     Export:
-      Name: "VPCID"
+      Name: "AWSomeVPCID"

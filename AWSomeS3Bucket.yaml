@@ -15,9 +15,9 @@ Resources:
         - Key: "purpose"
           Value: "project2"
 
-    # Outputs: S3 bucket name and ARN
-    Outputs:
-      AWSomeS3BucketName:
-        Value: !Ref AWSomeStackS3Bucket
-      AWSomeS3BucketURL:
-        Value: !Sub '${AWSomeStackS3Bucket}'
+# Outputs: S3 bucket name and base url
+Outputs:
+  AWSomeS3BucketName:
+    Value: !Ref AWSomeStackS3Bucket
+  AWSomeS3BucketURL:
+    Value: !Sub 'https://${AWSomeStackS3Bucket}.s3.amazonaws.com/'

@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: IAM Roles.
+
+
+Resources:
+  AWSomeAPILambdaRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: Role for Lambda function to assume with CloudWatch and DynamoDB full access
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+      RoleName: AWSomeAPILambdaRole
+      Tags: 
+        - Key: "team"
+          Value: "awsome"
+        - Key: "purpose"
+          Value: "project2"
+
+Outputs:
+  APILambdaRoleName:
+    Description: "IAM Role to allow Lambda function access to CloudWatch and DynamoDB"
+    Value: !Ref AWSomeAPILambdaRole
+    Export:
+      Name: "AWSomeAPILambdaRoleName"
+  APILambdaRoleARN:
+    Description: "IAM Role to allow Lambda function access to CloudWatch and DynamoDB"
+    Value: !GetAtt AWSomeAPILambdaRole.Arn
+    Export:
+      Name: "AWSomeAPILambdaRoleARN"
