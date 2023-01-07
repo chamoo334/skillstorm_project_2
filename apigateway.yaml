@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: API Gateway.
+Description: Public API Gateway.
 
 Parameters:
   LambdaFunctionArn:

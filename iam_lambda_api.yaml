@@ -1,6 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: IAM Roles.
-
+Description: IAM Role for Lambda function.
 
 Resources:
   AWSomeAPILambdaRole:

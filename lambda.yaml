@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Lambda.
+Description: Lambda function to handle API Gateway resources & methods.
 
 Parameters:
   LambdaRoleArn:

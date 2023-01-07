@@ -112,3 +112,10 @@ Outputs:
 
 ## Nested Stack
 - [AWS::CloudFormation::Stack](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-stack.html)
+- On deletion, parent stack might remain in delete_failed state. To fix:
+  - reselect parent stack
+  - reselect delete
+  - popup screen will ask which children stacks to keep:
+    - select children stacks causing dependency issue
+  - proceed to delete parent stack
+  - proceed to individually delete children stacks

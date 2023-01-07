@@ -90,9 +90,9 @@ Outputs:
   APILambdaFunctionName:
     Description: "Name of Lambda function to handle API Gateway and DynamoDB interactions"
     Value: !GetAtt APILambdaFunction.Outputs.APILambdaFunctionName
-  APILambdaFunctionArn:
-    Description: "ARN of Lambda function to handle API Gateway and DynamoDB interactions"
-    Value: !GetAtt APILambdaFunction.Outputs.APILambdaFunctionArn
+  # APILambdaFunctionArn:
+  #   Description: "ARN of Lambda function to handle API Gateway and DynamoDB interactions"
+  #   Value: !GetAtt APILambdaFunction.Outputs.APILambdaFunctionArn
   #API Gateway
   RestAPIHealthURL:
     Description: "REST API GET /health URL"
