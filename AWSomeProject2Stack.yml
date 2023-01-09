@@ -1,11 +1,16 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Nested stack includes VPC, DynamoDB, API Gateway, Lambda, IAM Roles
 
+Parameters:
+  S3BucketName:
+    Description: S3 Bucket where CloudFormation templates can be found.
+    Type: String
+
 Resources:
   VPCInfrastructure:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://awsome-stack-project-2-test.s3.amazonaws.com/Project2UnderlyingInfra.yaml
+      TemplateURL: !Sub 'https://${S3BucketName}.s3.amazonaws.com/Project2UnderlyingInfra.yml'
       Tags: 
         - Key: "name"
           Value: "team-awsome"
@@ -14,7 +19,7 @@ Resources:
   IAMRoles:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://awsome-stack-project-2-test.s3.amazonaws.com/iam.yaml
+      TemplateURL: !Sub 'https://${S3BucketName}.s3.amazonaws.com/iam.yml'
       Tags:
       - Key: "name"
         Value: "team-awsome"
@@ -23,7 +28,7 @@ Resources:
   DynamoDBTable:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://awsome-stack-project-2-test.s3.amazonaws.com/dynamodb.yaml
+      TemplateURL: !Sub 'https://${S3BucketName}.s3.amazonaws.com/dynamodb.yml'
       Tags:
       - Key: "name"
         Value: "team-awsome"
@@ -32,9 +37,9 @@ Resources:
   APILambdaFunction:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://awsome-stack-project-2-test.s3.amazonaws.com/lambda.yaml
+      TemplateURL: !Sub 'https://${S3BucketName}.s3.amazonaws.com/lambda.yml'
       Parameters: 
-        LambdaRoleArn: !ImportValue AWSomeAPILambdaRoleARN
+        LambdaRoleArn: !GetAtt IAMRoles.Outputs.APILambdaRoleARN
       Tags:
       - Key: "name"
         Value: "team-awsome"
@@ -43,9 +48,9 @@ Resources:
   APIGatewayRestAPI:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://awsome-stack-project-2-test.s3.amazonaws.com/apigateway.yaml
+      TemplateURL: !Sub 'https://${S3BucketName}.s3.amazonaws.com/apigateway.yml'
       Parameters: 
-        LambdaFunctionArn: !ImportValue AWSomeAPILambdaFunctionArn
+        LambdaFunctionArn: !GetAtt APILambdaFunction.Outputs.APILambdaFunctionArn
       Tags:
       - Key: "name"
         Value: "team-awsome"
@@ -90,9 +95,6 @@ Outputs:
   APILambdaFunctionName:
     Description: "Name of Lambda function to handle API Gateway and DynamoDB interactions"
     Value: !GetAtt APILambdaFunction.Outputs.APILambdaFunctionName
-  # APILambdaFunctionArn:
-  #   Description: "ARN of Lambda function to handle API Gateway and DynamoDB interactions"
-  #   Value: !GetAtt APILambdaFunction.Outputs.APILambdaFunctionArn
   #API Gateway
   RestAPIHealthURL:
     Description: "REST API GET /health URL"
