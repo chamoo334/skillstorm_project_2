@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Example use of Parameters, !Ref, and !GetAttr
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-instance.html
+
+Parameters:
+  SecurityGroupDescription:
+    Description: Security Group Description
+    Type: String
+  SelectedKey:
+    Description: SSH key
+    Type: String
+  # SelectedVPC:
+  #   Description: VPC to host EC2 instance
+  #   Type: String
+
+Resources:
+  ExInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: us-east-1a
+      ImageId: ami-0b5eea76982371e91
+      InstanceType: t2.micro
+      KeyName: !Ref SelectedKey
+      SecurityGroupIds: 
+        - !GetAtt ExSecurityGroup.GroupId
+
+  ExEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref ExInstance
+  
+  ExSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: !Ref SecurityGroupDescription
+      GroupName: exSG
+      SecurityGroupEgress: 
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 0
+          CidrIp: 0.0.0.0/0
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: exSG
+      VpcId: vpc-01325fc6760de2093

@@ -1,0 +1,173 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Public API Gateway.
+
+Parameters:
+  LambdaFunctionArn:
+    Type: String
+    Description: ARN of Lambda function to handle API methods.
+
+Resources:
+  # API Gateway Rest API
+  # TODO: Private?
+  AWSomeAPIGatewayRestAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: AWSomeAPI
+      Tags: 
+        - Key: "name"
+          Value: "team-awsome"
+        - Key: "purpose"
+          Value: "project2"
+  
+  # API Gateway Resources
+  # TODO: Loop?
+  AWSomeAPIHealthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties: 
+      ParentId: !GetAtt
+        - AWSomeAPIGatewayRestAPI
+        - RootResourceId
+      PathPart: health
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+
+  AWSomeAPIMessagesResource:
+    Type: AWS::ApiGateway::Resource
+    Properties: 
+      ParentId: !GetAtt
+        - AWSomeAPIGatewayRestAPI
+        - RootResourceId
+      PathPart: messages
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+
+  AWSomeAPISignResource:
+    Type: AWS::ApiGateway::Resource
+    DependsOn: AWSomeAPIGatewayRestAPI
+    Properties: 
+      ParentId: !GetAtt
+        - AWSomeAPIGatewayRestAPI
+        - RootResourceId
+      PathPart: sign
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+  
+  AWSomeAPIRemoveResource:
+    Type: AWS::ApiGateway::Resource
+    DependsOn: AWSomeAPIGatewayRestAPI
+    Properties: 
+      ParentId: !GetAtt
+        - AWSomeAPIGatewayRestAPI
+        - RootResourceId
+      PathPart: remove
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+
+  # API Gateway Methods
+  # TODO: Loop?
+  AWSomeAPIHealthMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn:
+      - AWSomeAPIHealthResource
+    Properties:
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+      ResourceId: !Ref AWSomeAPIHealthResource
+      AuthorizationType: None
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunctionArn}/invocations
+    
+  AWSomeAPIMessagesMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn:
+      - AWSomeAPIMessagesResource
+    Properties:
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+      ResourceId: !Ref AWSomeAPIMessagesResource
+      AuthorizationType: None
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunctionArn}/invocations
+  
+  AWSomeAPISignMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn:
+      - AWSomeAPISignResource
+    Properties:
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+      ResourceId: !Ref AWSomeAPISignResource
+      AuthorizationType: None
+      HttpMethod: POST
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunctionArn}/invocations
+  
+  AWSomeAPIRemoveMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn:
+      - AWSomeAPIRemoveResource
+    Properties:
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+      ResourceId: !Ref AWSomeAPIRemoveResource
+      AuthorizationType: None
+      HttpMethod: DELETE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunctionArn}/invocations
+
+  # API Gateway Permission to call Lambda function
+  AWSomeAPIGatewayPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref LambdaFunctionArn
+      Principal: apigateway.amazonaws.com
+    DependsOn:
+      - AWSomeAPIGatewayRestAPI
+
+  # API Gateway Deployment
+  AWSomeAPIGatewayDeployment:
+    Type: 'AWS::ApiGateway::Deployment'
+    Properties:
+      RestApiId: !Ref AWSomeAPIGatewayRestAPI
+      StageName: production
+    DependsOn:
+      - AWSomeAPIHealthMethod
+      - AWSomeAPIMessagesMethod
+      - AWSomeAPISignMethod
+      - AWSomeAPIRemoveMethod
+
+Outputs:
+  RestAPIHealthURL:
+    Description: "REST API GET /health URL"
+    Value: !Sub '${AWSomeAPIGatewayRestAPI}.execute-api.${AWS::Region}.amazonaws.com/production/health'
+  RestAPIMessagesURL:
+    Description: "REST API GET /messages URL"
+    Value: !Sub '${AWSomeAPIGatewayRestAPI}.execute-api.${AWS::Region}.amazonaws.com/production/messages'
+  RestAPISignURL:
+    Description: "REST API POST /sign URL"
+    Value: !Sub '${AWSomeAPIGatewayRestAPI}.execute-api.${AWS::Region}.amazonaws.com/production/sign'
+  RestAPIRemoveURL:
+    Description: "REST API DELETE /remove URL"
+    Value: !Sub '${AWSomeAPIGatewayRestAPI}.execute-api.${AWS::Region}.amazonaws.com/production/remove'
+  # RestAPI:
+  #   Description: "API Gateway Rest API"
+  #   Value: !Ref AWSomeAPIGatewayRestAPI
+  # RestAPIRouteResource:
+  #   Value: !GetAtt AWSomeAPIGatewayRestAPI.RootResourceId
+  # RestAPIDeployment:
+  #   Value: !Ref AWSomeAPIGatewayDeployment
+  # RestAPIDeploymentResource:
+  #   Value: !GetAtt AWSomeAPIGatewayDeployment.DeploymentId
+  # RestAPIResource:
+  #   Description: "API Gateway Rest API"
+  #   Value: !Ref AWSomeAPIHealthResource
+  # RestAPIResourceResource:
+  #   Value: !GetAtt AWSomeAPIHealthResource.ResourceId
+  # RestAPIMethod:
+  #   Description: "API Gateway Rest API"
+  #   Value: !Ref AWSomeAPIHealthResource
+  # RestAPIMethodResource:
+  #   Value: !GetAtt AWSomeAPIHealthResource.ResourceId

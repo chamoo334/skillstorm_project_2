@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: S3 Bucket for nested stack files. Ansible can be used to add files to S3 Bucket to reduce cost.
+
+Parameters:
+  BucketName:
+    Description: Project identifier to use as bucket name. S3 bucket naming rules apply.
+    Type: String
+
+Resources:
+  # S3 Bucket
+  AWSomeStackS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties: 
+      BucketName: !Ref BucketName
+      VersioningConfiguration: 
+        Status: Enabled
+      PublicAccessBlockConfiguration: 
+        BlockPublicPolicy: true
+      Tags: 
+        - Key: "name"
+          Value: "team-awsome"
+        - Key: "purpose"
+          Value: "project2"
+
+# Outputs: S3 bucket name and base url
+Outputs:
+  AWSomeS3BucketName:
+    Value: !Ref AWSomeStackS3Bucket
+  AWSomeS3BucketURL:
+    Value: !Sub https://${AWSomeStackS3Bucket}.s3.amazonaws.com/
