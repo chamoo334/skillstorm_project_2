@@ -7,104 +7,105 @@ Parameters:
     Type: String
 
 Resources:
-  VPCInfrastructure:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub 'https://${S3BucketName}.s3.amazonaws.com/Project2UnderlyingInfra.yml'
-      Tags: 
-        - Key: "name"
-          Value: "team-awsome"
-        - Key: "purpose"
-          Value: "project2"
+  # VPCInfrastructure:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: !Sub 'https://${S3BucketName}.s3.amazonaws.com/Project2UnderlyingInfra.yml'
+  #     Tags: 
+  #       - Key: "name"
+  #         Value: "team-awsome"
+  #       - Key: "purpose"
+  #         Value: "project2"
   IAMRoles:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub 'https://${S3BucketName}.s3.amazonaws.com/iam.yml'
+      # TemplateURL: 'https://test-boto3-cm-p2-3.s3.amazonaws.com/iam.yml'
       Tags:
       - Key: "name"
         Value: "team-awsome"
       - Key: "purpose"
         Value: "project2"
-  DynamoDBTable:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub 'https://${S3BucketName}.s3.amazonaws.com/dynamodb.yml'
-      Tags:
-      - Key: "name"
-        Value: "team-awsome"
-      - Key: "purpose"
-        Value: "project2"
-  APILambdaFunction:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub 'https://${S3BucketName}.s3.amazonaws.com/lambda.yml'
-      Parameters: 
-        LambdaRoleArn: !GetAtt IAMRoles.Outputs.APILambdaRoleARN
-      Tags:
-      - Key: "name"
-        Value: "team-awsome"
-      - Key: "purpose"
-        Value: "project2"
-  APIGatewayRestAPI:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub 'https://${S3BucketName}.s3.amazonaws.com/apigateway.yml'
-      Parameters: 
-        LambdaFunctionArn: !GetAtt APILambdaFunction.Outputs.APILambdaFunctionArn
-      Tags:
-      - Key: "name"
-        Value: "team-awsome"
-      - Key: "purpose"
-        Value: "project2"
+  # DynamoDBTable:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: !Sub 'https://${S3BucketName}.s3.amazonaws.com/dynamodb.yml'
+  #     Tags:
+  #     - Key: "name"
+  #       Value: "team-awsome"
+  #     - Key: "purpose"
+  #       Value: "project2"
+  # APILambdaFunction:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: !Sub 'https://${S3BucketName}.s3.amazonaws.com/lambda.yml'
+  #     Parameters: 
+  #       LambdaRoleArn: !GetAtt IAMRoles.Outputs.APILambdaRoleARN
+  #     Tags:
+  #     - Key: "name"
+  #       Value: "team-awsome"
+  #     - Key: "purpose"
+  #       Value: "project2"
+  # APIGatewayRestAPI:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: !Sub 'https://${S3BucketName}.s3.amazonaws.com/apigateway.yml'
+  #     Parameters: 
+  #       LambdaFunctionArn: !GetAtt APILambdaFunction.Outputs.APILambdaFunctionArn
+  #     Tags:
+  #     - Key: "name"
+  #       Value: "team-awsome"
+  #     - Key: "purpose"
+  #       Value: "project2"
 
-# Outputs
-Outputs:
-  # VPC
-  VPCStackRef:
-    Value: !Ref VPCInfrastructure
-  VPCRegion:
-    Value: !GetAtt VPCInfrastructure.Outputs.Region
-  DatabaseSubnet1CIDR:
-    Value: !GetAtt VPCInfrastructure.Outputs.DatabaseSubnet1CIDR
-  DatabaseSubnet2CIDR:
-    Value: !GetAtt VPCInfrastructure.Outputs.DatabaseSubnet2CIDR
-  DatabaseSubnet1ID:
-    Value: !GetAtt VPCInfrastructure.Outputs.DatabaseSubnet1ID
-  DatabaseSubnet2ID:
-    Value: !GetAtt VPCInfrastructure.Outputs.DatabaseSubnet2ID
-  AppInstanceSecurityGroupID:
-    Value: !GetAtt VPCInfrastructure.Outputs.AppInstanceSecurityGroupID
-  EFSMountTargetSecurityGroupID:
-    Value: !GetAtt VPCInfrastructure.Outputs.EFSMountTargetSecurityGroupID
-  RDSSecurityGroupID:
-    Value: !GetAtt VPCInfrastructure.Outputs.RDSSecurityGroupID
-  AWSomeVPCID:
-    Value: !GetAtt VPCInfrastructure.Outputs.AWSomeVPCID
-  # IAM Roles
-  APILambdaRoleName:
-    Description: "IAM Role to allow Lambda function access to CloudWatch and DynamoDB"
-    Value: !GetAtt IAMRoles.Outputs.APILambdaRoleName
-  APILambdaRoleARN:
-    Description: "IAM Role to allow Lambda function access to CloudWatch and DynamoDB"
-    Value: !GetAtt IAMRoles.Outputs.APILambdaRoleARN
-  # DynamoDB
-  DynamoDBTableName:
-    Description: "DynamoDB Table with partion key of id. Billing set to pay-per-request."
-    Value: !GetAtt DynamoDBTable.Outputs.DynamoDBTableName
-  # API Lambda
-  APILambdaFunctionName:
-    Description: "Name of Lambda function to handle API Gateway and DynamoDB interactions"
-    Value: !GetAtt APILambdaFunction.Outputs.APILambdaFunctionName
-  #API Gateway
-  RestAPIHealthURL:
-    Description: "REST API GET /health URL"
-    Value: !GetAtt APIGatewayRestAPI.Outputs.RestAPIHealthURL
-  RestAPIMessagesURL:
-    Description: "REST API GET /messages URL"
-    Value: !GetAtt APIGatewayRestAPI.Outputs.RestAPIMessagesURL
-  RestAPISignURL:
-    Description: "REST API POST /sign URL"
-    Value: !GetAtt APIGatewayRestAPI.Outputs.RestAPISignURL
-  RestAPIRemoveURL:
-    Description: "REST API DELETE /remove URL"
-    Value: !GetAtt APIGatewayRestAPI.Outputs.RestAPIRemoveURL
+# # Outputs
+# Outputs:
+#   # VPC
+#   VPCStackRef:
+#     Value: !Ref VPCInfrastructure
+#   VPCRegion:
+#     Value: !GetAtt VPCInfrastructure.Outputs.Region
+#   DatabaseSubnet1CIDR:
+#     Value: !GetAtt VPCInfrastructure.Outputs.DatabaseSubnet1CIDR
+#   DatabaseSubnet2CIDR:
+#     Value: !GetAtt VPCInfrastructure.Outputs.DatabaseSubnet2CIDR
+#   DatabaseSubnet1ID:
+#     Value: !GetAtt VPCInfrastructure.Outputs.DatabaseSubnet1ID
+#   DatabaseSubnet2ID:
+#     Value: !GetAtt VPCInfrastructure.Outputs.DatabaseSubnet2ID
+#   AppInstanceSecurityGroupID:
+#     Value: !GetAtt VPCInfrastructure.Outputs.AppInstanceSecurityGroupID
+#   EFSMountTargetSecurityGroupID:
+#     Value: !GetAtt VPCInfrastructure.Outputs.EFSMountTargetSecurityGroupID
+#   RDSSecurityGroupID:
+#     Value: !GetAtt VPCInfrastructure.Outputs.RDSSecurityGroupID
+#   AWSomeVPCID:
+#     Value: !GetAtt VPCInfrastructure.Outputs.AWSomeVPCID
+#   # IAM Roles
+#   APILambdaRoleName:
+#     Description: "IAM Role to allow Lambda function access to CloudWatch and DynamoDB"
+#     Value: !GetAtt IAMRoles.Outputs.APILambdaRoleName
+#   APILambdaRoleARN:
+#     Description: "IAM Role to allow Lambda function access to CloudWatch and DynamoDB"
+#     Value: !GetAtt IAMRoles.Outputs.APILambdaRoleARN
+#   # DynamoDB
+#   DynamoDBTableName:
+#     Description: "DynamoDB Table with partion key of id. Billing set to pay-per-request."
+#     Value: !GetAtt DynamoDBTable.Outputs.DynamoDBTableName
+#   # API Lambda
+#   APILambdaFunctionName:
+#     Description: "Name of Lambda function to handle API Gateway and DynamoDB interactions"
+#     Value: !GetAtt APILambdaFunction.Outputs.APILambdaFunctionName
+#   #API Gateway
+#   RestAPIHealthURL:
+#     Description: "REST API GET /health URL"
+#     Value: !GetAtt APIGatewayRestAPI.Outputs.RestAPIHealthURL
+#   RestAPIMessagesURL:
+#     Description: "REST API GET /messages URL"
+#     Value: !GetAtt APIGatewayRestAPI.Outputs.RestAPIMessagesURL
+#   RestAPISignURL:
+#     Description: "REST API POST /sign URL"
+#     Value: !GetAtt APIGatewayRestAPI.Outputs.RestAPISignURL
+#   RestAPIRemoveURL:
+#     Description: "REST API DELETE /remove URL"
+#     Value: !GetAtt APIGatewayRestAPI.Outputs.RestAPIRemoveURL
